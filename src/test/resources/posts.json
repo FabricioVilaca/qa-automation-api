@@ -1,0 +1,17 @@
+[
+  {
+    "title": "QA Docker",
+    "body": "Testing with POJO",
+    "userId": 1
+  },
+  {
+    "title": "API Param",
+    "body": "Parameterized test example",
+    "userId": 2
+  },
+  {
+    "title": "Edge Case",
+    "body": "Edge case body",
+    "userId": 3
+  }
+]

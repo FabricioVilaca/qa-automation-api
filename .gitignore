@@ -13,6 +13,9 @@ target/
 *.iml
 *.ipr
 
+# Logs
+*.log
+
 ### Eclipse ###
 .apt_generated
 .classpath
@@ -37,3 +40,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
+Thumbs.db
