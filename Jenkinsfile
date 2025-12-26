@@ -13,6 +13,20 @@ pipeline {
             }
         }
 
+        stage('Start API (Docker)') {
+            steps {
+                echo 'Starting API with Docker Compose'
+                bat 'docker compose up -d'
+            }
+        }
+
+        stage('Wait for API') {
+            steps {
+                echo 'Waiting for API to be ready'
+                bat 'timeout /t 10'
+            }
+        }
+
         stage('Run Tests') {
             steps {
                 echo 'Running Maven tests'
@@ -27,6 +41,10 @@ pipeline {
     }
 
     post {
+        always {
+            echo 'Stopping Docker containers'
+            bat 'docker compose down'
+        }
         success {
             echo 'Pipeline SUCCESS'
         }
