@@ -2,8 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
-        MVN_HOME = tool name 'Maven 3', type 'maven'
+        MVN_HOME = tool(name: 'Maven 3', type: 'maven')
     }
 
     stages {
@@ -14,40 +13,25 @@ pipeline {
             }
         }
 
-        stage('Start Docker Environment') {
-            steps {
-                echo Launch of Docker Compose...
-                sh docker-compose -f ${DOCKER_COMPOSE_FILE} up -d
-                sh sleep 5
-            }
-        }
-
         stage('Run Tests') {
             steps {
-                echo Exécution Maven Tests...
-                sh ${MVN_HOME}binmvn clean test
+                echo 'Running Maven tests'
+                sh "${MVN_HOME}/bin/mvn clean test"
             }
             post {
                 always {
-                    junit 'targetsurefire-reports.xml'
+                    junit '**/target/surefire-reports/*.xml'
                 }
-            }
-        }
-
-        stage('Stop Docker Environment') {
-            steps {
-                echo Stop and Clean Docker Container...
-                sh docker-compose -f ${DOCKER_COMPOSE_FILE} down
             }
         }
     }
 
     post {
         success {
-            echo Pipeline successfullly finished ✅
+            echo 'Pipeline SUCCESS'
         }
         failure {
-            echo Pipeline failed ❌
+            echo 'Pipeline FAILED'
         }
     }
 }
