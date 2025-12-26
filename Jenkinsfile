@@ -16,7 +16,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 echo 'Running Maven tests'
-                sh "${MVN_HOME}/bin/mvn clean test"
+                bat "\"${MVN_HOME}\\bin\\mvn\" clean test"
             }
             post {
                 always {
