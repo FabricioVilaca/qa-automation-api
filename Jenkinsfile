@@ -26,7 +26,7 @@ pipeline {
 
                 echo "Waiting for API to be ready..."
                 powershell '''
-                $maxRetries = 10
+                $maxRetries = 15
                 $apiReady = $false
                 for ($i=0; $i -lt $maxRetries; $i++) {
                     try {
