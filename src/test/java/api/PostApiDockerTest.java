@@ -1,14 +1,15 @@
-package org.example.api;
+package api;
 
+import config.ApiConfig;
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import model.Post;
-import org.example.config.ApiConfig;
-import org.example.utils.TestDataUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.TestDataUtils;
 
 import java.io.IOException;
 import java.util.stream.Stream;
@@ -39,7 +40,7 @@ public class PostApiDockerTest {
 
             postId =
                     given()
-                            .contentType("application/json")
+                            .contentType(ContentType.JSON)
                             .body(post)
                             .when()
                             .post("/posts")

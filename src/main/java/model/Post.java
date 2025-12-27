@@ -1,4 +1,4 @@
-package org.example.api;
+package model;
 
 public class Post {
 

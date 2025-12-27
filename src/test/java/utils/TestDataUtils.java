@@ -1,4 +1,4 @@
-package org.example.utils;
+package utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import model.Post;
