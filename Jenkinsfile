@@ -2,61 +2,66 @@ pipeline {
     agent any
 
     environment {
-        MVN_HOME = tool(name: 'Maven 3', type: 'maven')
+        MVN_HOME = tool (name: 'Maven 3.9.12', type: 'maven')
     }
 
     stages {
-
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-		
-		stage('Cleanup') {
+        stage('Cleanup') {
             steps {
                 echo "Stopping and removing old containers"
-                bat 'docker compose down --remove-orphans || true'
+                powershell 'docker compose down --remove-orphans'
             }
         }
 
-        stage('Start API (Docker)') {
+        stage('Start Docker API') {
             steps {
-                echo 'Starting API with Docker Compose'
-                bat 'docker compose up -d'
-            }
-        }
+                echo "Starting Docker Compose services"
+                powershell 'docker compose up -d'
 
-        stage('Wait for API') {
-            steps {
-                echo 'Waiting for API to be ready'
-                bat 'timeout /t 10'
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                echo 'Running Maven tests'
-                bat "\"${MVN_HOME}\\bin\\mvn\" clean test"
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
+                echo "Waiting for API to be ready..."
+                powershell '''
+                $maxRetries = 10
+                $apiReady = $false
+                for ($i=0; $i -lt $maxRetries; $i++) {
+                    try {
+                        $response = Invoke-WebRequest -Uri http://127.0.0.1:3000/posts -UseBasicParsing -TimeoutSec 2
+                        if ($response.StatusCode -eq 200) {
+                            Write-Host "API is ready!"
+                            $apiReady = $true
+                            break
+                        }
+                    } catch {
+                        Write-Host "Waiting for API... retry $($i+1)/$maxRetries"
+                        Start-Sleep -Seconds 2
+                    }
                 }
+                if (-not $apiReady) {
+                    throw "API did not start in time"
+                }
+                '''
+            }
+        }
+
+        stage('Run Maven Tests') {
+            steps {
+                echo "Running Maven tests"
+                powershell "${env.MVN_HOME}\\bin\\mvn clean test"
             }
         }
     }
 
     post {
         always {
-            echo 'Stopping Docker containers'
-            bat 'docker compose down'
+            echo "Stopping Docker Compose services"
+            powershell 'docker compose down --remove-orphans'
         }
+
         success {
-            echo 'Pipeline SUCCESS'
+            echo "Build and tests succeeded!"
         }
+
         failure {
-            echo 'Pipeline FAILED'
+            echo "Build or tests failed!"
         }
     }
 }
