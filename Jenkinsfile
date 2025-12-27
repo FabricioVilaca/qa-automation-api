@@ -1,30 +1,37 @@
 pipeline {
     agent any
-
     environment {
-        MVN_HOME = tool (name: 'Maven 3.9.12', type: 'maven')
+        MVN_HOME = 'C:\\Program Files\\Apache\\maven-3.9.12' // chemin Maven installé sur Jenkins
+        DOCKER_COMPOSE_FILE = 'docker-compose.yml'
     }
-
     stages {
-        stage('Initial Cleanup') {
+
+        stage('Clean Workspace') {
             steps {
-                echo "Stopping and removing any existing containers"
-                powershell '''
-                try {
-                    docker compose down --remove-orphans
-                } catch {
-                    Write-Host "No containers to remove or command failed"
-                }
-                '''
+                echo 'Cleaning workspace...'
+                deleteDir()
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout scm
             }
         }
 
         stage('Start Docker API') {
             steps {
-                echo "Starting Docker Compose services"
-                powershell 'docker compose up -d'
+                echo 'Starting Docker Compose services...'
+                powershell '''
+                docker compose down --remove-orphans
+                docker compose up -d
+                '''
+            }
+        }
 
-                echo "Waiting for API to be ready..."
+        stage('Wait for API') {
+            steps {
+                echo 'Waiting for API to be ready...'
                 powershell '''
                 $maxRetries = 15
                 $apiReady = $false
@@ -50,33 +57,37 @@ pipeline {
 
         stage('Run Maven Tests') {
             steps {
-                echo "Running Maven tests"
-                powershell "${env.MVN_HOME}\\bin\\mvn clean test"
-				junit 'target/surefire-reports/*.xml'
+                echo 'Running Maven tests with retry...'
+                retry(3) {
+                    powershell "${env.MVN_HOME}\\bin\\mvn clean test -Dsurefire.printSummary=true"
+                }
+            }
+            post {
+                always {
+                    echo 'Archiving JUnit results...'
+                    junit 'target/surefire-reports/*.xml'
+                }
+                unsuccessful {
+                    echo 'Tests failed! Marking build as FAILURE'
+                    script { currentBuild.result = 'FAILURE' }
+                }
             }
         }
 
-        stage('Final Cleanup') {
-            steps {
-                echo "Stopping Docker Compose services after tests"
-                powershell '''
-                try {
-                    docker compose down --remove-orphans
-                } catch {
-                    Write-Host "No containers to remove or command failed"
-                }
-                '''
-            }
-        }
     }
 
     post {
-        success {
-            echo "Build and tests succeeded!"
+        always {
+            echo 'Stopping Docker Compose services after tests...'
+            powershell '''
+            docker compose down --remove-orphans
+            '''
         }
-
         failure {
-            echo "Build or tests failed!"
+            echo 'Build failed!'
+        }
+        success {
+            echo 'Build succeeded!'
         }
     }
 }
