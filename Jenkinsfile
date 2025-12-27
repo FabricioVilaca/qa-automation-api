@@ -12,6 +12,13 @@ pipeline {
                 checkout scm
             }
         }
+		
+		stage('Cleanup') {
+            steps {
+                echo "Stopping and removing old containers"
+                bat 'docker compose down --remove-orphans || true'
+            }
+        }
 
         stage('Start API (Docker)') {
             steps {
