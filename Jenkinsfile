@@ -2,60 +2,70 @@ pipeline {
     agent any
 
     environment {
-        MVN_HOME = tool (name: 'Maven 3.9.12', type: 'maven')
+        MVN_HOME = tool name: 'Maven 3.9.12', type: 'maven'
     }
 
     stages {
-        stage('Cleanup') {
+        stage('Initial Cleanup') {
             steps {
-                echo "Stopping and removing old containers"
-                powershell 'docker compose down --remove-orphans'
+                echo "Stopping and removing any existing containers"
+                node {
+                    powershell 'docker compose down --remove-orphans || Write-Host "No containers to remove"'
+                }
             }
         }
 
         stage('Start Docker API') {
             steps {
                 echo "Starting Docker Compose services"
-                powershell 'docker compose up -d'
+                node {
+                    powershell 'docker compose up -d'
 
-                echo "Waiting for API to be ready..."
-                powershell '''
-                $maxRetries = 10
-                $apiReady = $false
-                for ($i=0; $i -lt $maxRetries; $i++) {
-                    try {
-                        $response = Invoke-WebRequest -Uri http://127.0.0.1:3000/posts -UseBasicParsing -TimeoutSec 2
-                        if ($response.StatusCode -eq 200) {
-                            Write-Host "API is ready!"
-                            $apiReady = $true
-                            break
+                    echo "Waiting for API to be ready..."
+                    powershell '''
+                    $maxRetries = 10
+                    $apiReady = $false
+                    for ($i=0; $i -lt $maxRetries; $i++) {
+                        try {
+                            $response = Invoke-WebRequest -Uri http://127.0.0.1:3000/posts -UseBasicParsing -TimeoutSec 2
+                            if ($response.StatusCode -eq 200) {
+                                Write-Host "API is ready!"
+                                $apiReady = $true
+                                break
+                            }
+                        } catch {
+                            Write-Host "Waiting for API... retry $($i+1)/$maxRetries"
+                            Start-Sleep -Seconds 2
                         }
-                    } catch {
-                        Write-Host "Waiting for API... retry $($i+1)/$maxRetries"
-                        Start-Sleep -Seconds 2
                     }
+                    if (-not $apiReady) {
+                        throw "API did not start in time"
+                    }
+                    '''
                 }
-                if (-not $apiReady) {
-                    throw "API did not start in time"
-                }
-                '''
             }
         }
 
         stage('Run Maven Tests') {
             steps {
                 echo "Running Maven tests"
-                powershell "${env.MVN_HOME}\\bin\\mvn clean test"
+                node {
+                    powershell "${env.MVN_HOME}\\bin\\mvn clean test"
+                }
+            }
+        }
+
+        stage('Final Cleanup') {
+            steps {
+                echo "Stopping Docker Compose services after tests"
+                node {
+                    powershell 'docker compose down --remove-orphans || Write-Host "No containers to remove"'
+                }
             }
         }
     }
 
     post {
-        always {
-            echo "Stopping Docker Compose services"
-            powershell 'docker compose down --remove-orphans'
-        }
-
         success {
             echo "Build and tests succeeded!"
         }
