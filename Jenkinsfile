@@ -52,6 +52,7 @@ pipeline {
             steps {
                 echo "Running Maven tests"
                 powershell "${env.MVN_HOME}\\bin\\mvn clean test"
+				junit 'target/surefire-reports/*.xml'
             }
         }
 
