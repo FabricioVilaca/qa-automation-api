@@ -59,7 +59,7 @@ pipeline {
             steps {
                 echo 'Running Maven tests with retry...'
                 retry(3) {
-                    powershell "& \"${env.MVN_HOME}\\bin\\mvn" clean test -Dsurefire.printSummary=true"
+                    powershell "& \"${env.MVN_HOME}\\bin\\mvn\" clean test -Dsurefire.printSummary=true"
                 }
             }
             post {
