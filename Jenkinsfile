@@ -2,15 +2,20 @@ pipeline {
     agent any
 
     environment {
-        // Maven configuré dans Jenkins Global Tool Configuration
-        MVN_HOME = tool name: 'Maven 3.9.12', type: 'maven'
+        MVN_HOME = tool (name: 'Maven 3.9.12', type: 'maven')
     }
 
     stages {
         stage('Initial Cleanup') {
             steps {
                 echo "Stopping and removing any existing containers"
-                powershell 'docker compose down --remove-orphans || Write-Host "No containers to remove"'
+                powershell '''
+                try {
+                    docker compose down --remove-orphans
+                } catch {
+                    Write-Host "No containers to remove or command failed"
+                }
+                '''
             }
         }
 
@@ -53,7 +58,13 @@ pipeline {
         stage('Final Cleanup') {
             steps {
                 echo "Stopping Docker Compose services after tests"
-                powershell 'docker compose down --remove-orphans || Write-Host "No containers to remove"'
+                powershell '''
+                try {
+                    docker compose down --remove-orphans
+                } catch {
+                    Write-Host "No containers to remove or command failed"
+                }
+                '''
             }
         }
     }
