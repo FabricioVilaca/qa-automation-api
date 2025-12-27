@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        MVN_HOME = '"C:\\Program Files\\Apache\\maven-3.9.12\\bin\\mvn"'
+        MVN_HOME = 'C:\\Program Files\\Apache\\maven-3.9.12'
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
     }
     stages {
@@ -59,7 +59,7 @@ pipeline {
             steps {
                 echo 'Running Maven tests with retry...'
                 retry(3) {
-                    powershell "${env.MVN_HOME} clean test -Dsurefire.printSummary=true"
+                    powershell "& \"${env.MVN_HOME}\\bin\\mvn" clean test -Dsurefire.printSummary=true"
                 }
             }
             post {
