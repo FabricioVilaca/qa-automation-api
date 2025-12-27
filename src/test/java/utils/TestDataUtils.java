@@ -1,7 +1,7 @@
 package org.example.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.api.Post;
+import model.Post;
 import org.junit.jupiter.params.provider.Arguments;
 
 import java.io.File;

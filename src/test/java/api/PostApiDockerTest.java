@@ -1,6 +1,7 @@
 package org.example.api;
 
 import io.restassured.RestAssured;
+import model.Post;
 import org.example.config.ApiConfig;
 import org.example.utils.TestDataUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -85,7 +86,7 @@ public class PostApiDockerTest {
                     .statusCode(404);
 
             LOGGER.info("Verify deletion post with id {}", postId);
-            
+
         } catch (AssertionError | Exception e) {
             LOGGER.error("Test failed for post: {} (ID: {})", post.getTitle(), postId, e);
             throw e;
