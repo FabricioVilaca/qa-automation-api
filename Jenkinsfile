@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        MVN_HOME = 'C:\\Program Files\\Apache\\maven-3.9.12' // chemin Maven installé sur Jenkins
+        MVN_HOME = '"C:\\Program Files\\Apache\\maven-3.9.12"'
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
     }
     stages {
