@@ -1,0 +1,11 @@
+services:
+  api:
+    image: node:18
+    container_name: projet0-api
+    working_dir: /app
+    volumes:
+      - ./db.json:/app/db.json
+      - ./:/app
+    ports:
+      - "3000:3000"
+    command: npx json-server --watch db.json --port 3000
